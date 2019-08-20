@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tic Tac Toe</title>
+	<style type="text/css">
+		body{
+			padding: 54px;
+		}
+		div.container{
+			width: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		td{
+			width: 100px;
+			height: 100px;
+			text-align: center;
+			vertical-align: middle;
+			border: 1px solid black;
+		}
+		td > a {
+			text-decoration: none;
+			width: 100%;
+			height: 100%;
+			padding: 40px;
+		}
+
+		td.red{
+			background-color: red;
+		}
+		td.black{
+			background-color: black;
+		}
+		td.border-blue{
+			border: 2px solid blue;
+		}
+		#lblAlert{
+			text-align: center;
+			padding: 24px;
+			color: red;
+		}
+
+	</style>
+</head>
+<body>
+	<div id="lblAlert">
+		
+	</div>
+	<div class="container">
+		<table id="myTable">
+			<tr>
+				<td><a href="javascript:;" onclick="game.userClick(0,0)">a1</a></td>
+				<td><a href="javascript:;" onclick="game.userClick(0,1)">b1</a></td>
+				<td><a href="javascript:;" onclick="game.userClick(0,2)">c1</a></td>
+			</tr>
+			<tr>
+				<td><a href="javascript:;" onclick="game.userClick(1,0)">a2</a></td>
+				<td><a href="javascript:;" onclick="game.userClick(1,1)">b2</a></td>
+				<td><a href="javascript:;" onclick="game.userClick(1,2)">c2</a></td>
+			</tr>
+			<tr>
+				<td><a href="javascript:;" onclick="game.userClick(2,0)">a3</a></td>
+				<td><a href="javascript:;" onclick="game.userClick(2,1)">b3</a></td>
+				<td><a href="javascript:;" onclick="game.userClick(2,2)">c3</a></td>
+			</tr>
+		</table>
+	</div>
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript">
+		var game = {
+			winPattern: [
+				[{x:0,y:0}, {x:0,y:1}, {x:0,y:2}],
+				[{x:1,y:0}, {x:1,y:1}, {x:1,y:2}],
+				[{x:2,y:0}, {x:2,y:1}, {x:2,y:2}],
+
+				[{x:0,y:0}, {x:1,y:0}, {x:2,y:0}],
+				[{x:0,y:1}, {x:1,y:1}, {x:2,y:1}],
+				[{x:0,y:2}, {x:1,y:2}, {x:2,y:2}],
+
+				[{x:0,y:0}, {x:1,y:1}, {x:2,y:2}],
+				[{x:0,y:2}, {x:1,y:1}, {x:2,y:0}],
+			],
+			board: [
+				[null,null,null],
+				[null,null,null],
+				[null,null,null]
+			],
+			freeTurns: 3,
+			selectedBox:{
+				x:null,
+				y:null
+			},
+			turn: "user", // => user, robot
+			userClick: (x,y) => {
+				// clear alert
+				$("#lblAlert").text("");
+
+				if(game.freeTurns > 0 || (game.selectedBox.x != null && game.checkEmpty(x,y) ) ){
+					game.fillingBox(x,y);
+				}
+				else if( game.selectedBox.x == null ){
+					game.selectBox(x,y);
+				}
+				else if(game.selectedBox.x == x && game.selectedBox.y == y){
+					// clear 
+					game.selectedBox = {x:null, y:null};
+					$("#myTable").find("tr").find("td").removeClass("border-blue");
+				}
+				else{
+					$("#lblAlert").text("Please move to empty box only!");
+				}
+			},
+			checkEmpty: (x,y) => {
+				return game.board[x][y] == null;
+			},
+			selectBox: (x,y) =>{
+				if( game.board[x][y] == "red" ){
+					game.selectedBox.x = x;
+					game.selectedBox.y = y;
+					$("#myTable").find("tr:eq("+x+")").find("td:eq("+y+")").addClass("border-blue");
+				}
+				else{
+					$("#lblAlert").text("Please select the red box to move to another box!");
+				}
+			},
+			fillingBox: (x,y) => {
+
+				if( ! game.checkEmpty(x,y) ){
+					$("#lblAlert").text("Please select empty box only!");
+					return;
+				}
+
+
+				if( game.freeTurns > 0 ){
+					game.freeTurns--;
+				}
+				else{
+					var checkResult = game.checkIsBoxNearFromSelected(x,y);
+					if( checkResult ){
+						game.board[game.selectedBox.x][game.selectedBox.y] = null;
+						game.selectedBox = {x:null,y:null};
+					}
+					else{
+						$("#lblAlert").text("Please select empty box that near from red box!");
+						return;
+					}
+				}
+				game.board[x][y] = "red";
+				game.reDraw();	
+			},
+			checkIsBoxNearFromSelected: (x,y) =>{
+				var testX = Math.abs(x - game.selectedBox.x); 
+				var testY = Math.abs(y - game.selectedBox.y);
+				if(testX < 2 && testY < 2){
+					return true;
+				}
+				return false;
+			},
+			reDraw: () =>{
+				var tbody = '';
+				for(var x=0; x<3; x++){
+					tbody += '<tr>';
+					tbody += '<td class="'+ game.board[x][0] +' "><a href="javascript:;" onclick="game.userClick('+x+',0)">a'+x+'</a></td>';
+					tbody += '<td class="'+ game.board[x][1] +' "><a href="javascript:;" onclick="game.userClick('+x+',1)">b'+x+'</a></td>';
+					tbody += '<td class="'+ game.board[x][2] +' "><a href="javascript:;" onclick="game.userClick('+x+',2)">c'+x+'</a></td>';
+					tbody += '</tr>';
+				}
+				$("#myTable").html(tbody);
+
+				console.log( game.turn );
+				if(game.turn == "user"){
+					game.turn = "robot";
+					robot.play();
+				}
+				else{
+					game.turn = "user";
+				}
+				
+			},
+			playWinAnimation: ( pattern, timer ) =>{
+				setTimeout( function(){ 
+					$("#myTable").find("tr").find("td").removeClass("red");
+					$("#myTable").find("tr:eq("+pattern[0].x+")").find("td:eq("+pattern[0].y+")").addClass("red");
+					$("#myTable").find("tr:eq("+pattern[1].x+")").find("td:eq("+pattern[1].y+")").addClass("red");
+					$("#myTable").find("tr:eq("+pattern[2].x+")").find("td:eq("+pattern[2].y+")").addClass("red");
+				}, timer );
+			},
+			start: () =>{
+				for(var i=0; i<game.winPattern.length; i++){
+					var timer = i * 500;
+					var pattern = game.winPattern[i];
+					game.playWinAnimation( pattern, timer); 
+				}
+
+				var timer = 500 * game.winPattern.length + 500;
+				setTimeout( function(){ 
+					$("#myTable").find("tr").find("td").removeClass("red");
+
+				}, timer );
+			}
+		}
+
+		game.start();
+
+
+
+		var robot = {
+			optionMove: [],
+			countPoint: (x,y, redOrBlack) => {
+				if( game.board[x][y] == redOrBlack ){
+					return 2;
+				}
+				else if( game.board[x][y] == null ){
+					return 1;
+				}
+				else{
+					return 0;
+				}
+			},
+			thinkToWin: () =>{
+				robot.optionMove = [];
+				var moveStep = [];
+				for(var i=0; i<game.winPattern.length; i++){
+					var pattern = game.winPattern[i];
+					var poin = 	robot.countPoint( pattern[0].x, pattern[0].y, "black" );
+						poin += robot.countPoint( pattern[1].x, pattern[1].y, "black" );
+						poin += robot.countPoint( pattern[2].x, pattern[2].y, "black" );
+					if( poin == 5){
+						moveStep = pattern;
+						break;
+					}
+					robot.optionMove.push( {pattern: pattern, poin:poin} );
+				}
+
+				return moveStep;
+			},
+			thinkToSurvive: () =>{
+				var moveStep = [];
+				for(var i=0; i<game.winPattern.length; i++){
+					var pattern = game.winPattern[i];
+					var poin = 	robot.countPoint( pattern[0].x, pattern[0].y, "red" );
+						poin += robot.countPoint( pattern[1].x, pattern[1].y, "red" );
+						poin += robot.countPoint( pattern[2].x, pattern[2].y, "red" );
+						
+					if( poin == 5){
+						moveStep = pattern;
+						break;
+					}
+				}
+
+				return moveStep;
+			},
+			play: () =>{
+				
+				var stepToWin 		= robot.thinkToWin();
+
+				for(var trial of stepToWin){
+					if( game.checkEmpty(trial.x, trial.y) ){
+						game.board[trial.x][trial.y] = "black";
+						game.reDraw();
+						return;
+					}
+				}
+
+				var stepToSurvive 	= robot.thinkToSurvive();
+
+				for(var trial of stepToSurvive){
+					if( game.checkEmpty(trial.x, trial.y) ){
+						game.board[trial.x][trial.y] = "black";
+						game.reDraw();
+						return;
+					}
+				}
+
+
+				var sorted_array = robot.optionMove.sort(function(a, b){return a.poin - b.poin});
+				var moveChoosen = sorted_array[ sorted_array.length-1 ].pattern;
+				for(var trial of moveChoosen){
+					if( game.checkEmpty(trial.x, trial.y) ){
+						game.board[trial.x][trial.y] = "black";
+						game.reDraw();
+						return;
+					}
+				}
+			}
+		}
+	</script>
+</body>
+</html>
